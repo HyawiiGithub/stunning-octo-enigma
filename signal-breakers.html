@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Breakers — Enter the Zone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #E8241A;
+    --red-dim: #8C1510;
+    --red-glow: rgba(232, 36, 26, 0.25);
+    --amber: #D4830A;
+    --amber-dim: #7A4C05;
+    --white: #F0EDE8;
+    --white-dim: rgba(240, 237, 232, 0.55);
+    --white-faint: rgba(240, 237, 232, 0.12);
+    --bg: #080808;
+    --bg2: #0E0E0E;
+    --bg3: #141414;
+    --line: rgba(240, 237, 232, 0.08);
+    --line-bright: rgba(240, 237, 232, 0.18);
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Bebas Neue', sans-serif;
+    --body: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: var(--body);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* NOISE GRAIN */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 9998;
+    animation: grain 0.4s steps(1) infinite;
+  }
+
+  @keyframes grain {
+    0%,100% { transform: translate(0,0); }
+    10% { transform: translate(-2%,-3%); }
+    20% { transform: translate(3%,1%); }
+    30% { transform: translate(-1%,4%); }
+    40% { transform: translate(4%,-2%); }
+    50% { transform: translate(-3%,3%); }
+    60% { transform: translate(2%,-4%); }
+    70% { transform: translate(-4%,1%); }
+    80% { transform: translate(1%,2%); }
+    90% { transform: translate(-2%,-1%); }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s;
+  }
+  nav.scrolled { border-color: var(--line); background: rgba(8,8,8,0.98); }
+
+  .nav-logo {
+    font-family: var(--display);
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    color: var(--white);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo-signal {
+    color: var(--red);
+    animation: pulse-text 3s ease-in-out infinite;
+  }
+  @keyframes pulse-text {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--white-dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--red); }
+
+  .nav-cta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red) !important;
+    border: 1px solid var(--red-dim);
+    padding: 8px 18px;
+    border-radius: 2px;
+    transition: all 0.2s !important;
+  }
+  .nav-cta:hover {
+    background: var(--red) !important;
+    color: var(--bg) !important;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    padding: 0 24px;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    animation: grid-shift 20s linear infinite;
+  }
+  @keyframes grid-shift {
+    from { transform: translateY(0); }
+    to { transform: translateY(60px); }
+  }
+
+  .hero-radial {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(232,36,26,0.08) 0%, transparent 70%);
+  }
+
+  .hero-scanline {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    opacity: 0.6;
+    animation: scanline 6s linear infinite;
+  }
+  @keyframes scanline {
+    from { top: -2px; opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.6; }
+    to { top: 100%; opacity: 0; }
+  }
+
+  .hero-overline {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    animation: fade-up 0.8s 0.2s forwards;
+  }
+  .hero-overline::before, .hero-overline::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--red-dim);
+  }
+
+  .hero-title {
+    font-family: var(--display);
+    font-size: clamp(80px, 16vw, 180px);
+    line-height: 0.88;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fade-up 0.8s 0.4s forwards;
+    position: relative;
+  }
+  .hero-title-break { display: block; }
+  .hero-title .red { color: var(--red); }
+
+  .glitch {
+    position: relative;
+    display: inline-block;
+  }
+  .glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .glitch::before {
+    color: #00ffea;
+    animation: glitch-1 4s infinite;
+    clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+    opacity: 0;
+  }
+  .glitch::after {
+    color: var(--red);
+    animation: glitch-2 4s infinite;
+    clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+    opacity: 0;
+  }
+  @keyframes glitch-1 {
+    0%,94%,100% { opacity: 0; transform: none; }
+    95% { opacity: 0.8; transform: translate(-3px, 0); }
+    97% { opacity: 0.8; transform: translate(3px, 0); }
+  }
+  @keyframes glitch-2 {
+    0%,94%,100% { opacity: 0; transform: none; }
+    96% { opacity: 0.6; transform: translate(4px, 0); }
+    98% { opacity: 0.6; transform: translate(-2px, 0); }
+  }
+
+  .hero-sub {
+    font-family: var(--body);
+    font-size: clamp(14px, 2vw, 18px);
+    font-weight: 300;
+    color: var(--white-dim);
+    max-width: 520px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+    margin-top: 24px;
+    opacity: 0;
+    animation: fade-up 0.8s 0.6s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    opacity: 0;
+    animation: fade-up 0.8s 0.8s forwards;
+  }
+
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--red);
+    border: none;
+    padding: 14px 32px;
+    cursor: pointer;
+    border-radius: 2px;
+    text-decoration: none;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: rgba(255,255,255,0.2);
+    transition: left 0.3s;
+  }
+  .btn-primary:hover::before { left: 100%; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--red-glow); }
+
+  .btn-ghost {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    background: none;
+    border: 1px solid var(--line-bright);
+    padding: 14px 32px;
+    cursor: pointer;
+    border-radius: 2px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { color: var(--white); border-color: var(--white-dim); }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fade-up 0.8s 1.2s forwards;
+  }
+  .hero-scroll span {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--white-dim);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(to bottom, var(--white-dim), transparent);
+    animation: scroll-pulse 2s ease-in-out infinite;
+  }
+  @keyframes scroll-pulse {
+    0%,100% { opacity: 1; transform: scaleY(1); transform-origin: top; }
+    50% { opacity: 0.4; }
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SIGNAL BAR */
+  .signal-bar {
+    background: var(--bg2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .signal-bar-inner {
+    display: inline-flex;
+    gap: 0;
+    animation: marquee 30s linear infinite;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .signal-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 40px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--white-dim);
+    text-transform: uppercase;
+    border-right: 1px solid var(--line);
+  }
+  .signal-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* SECTIONS */
+  section { padding: 120px 48px; max-width: 1200px; margin: 0 auto; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+    max-width: 60px;
+  }
+  .section-title {
+    font-family: var(--display);
+    font-size: clamp(48px, 7vw, 90px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    margin-bottom: 24px;
+  }
+
+  /* ABOUT / LOOP */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    margin-top: 80px;
+  }
+  .about-text {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--white-dim);
+    line-height: 1.8;
+  }
+  .about-text strong { color: var(--white); font-weight: 500; }
+
+  .loop-steps { display: flex; flex-direction: column; gap: 0; }
+  .loop-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .loop-step:first-child { border-top: 1px solid var(--line); }
+  .loop-step:hover { padding-left: 8px; }
+  .loop-step:hover .step-num { color: var(--red); }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--red-dim);
+    letter-spacing: 0.1em;
+    min-width: 28px;
+    padding-top: 2px;
+    transition: color 0.3s;
+  }
+  .step-content {}
+  .step-title {
+    font-family: var(--body);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--white);
+  }
+  .step-desc {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--white-dim);
+    line-height: 1.5;
+  }
+
+  /* ANOMALIES */
+  .anomalies-section {
+    max-width: 100%;
+    padding: 120px 48px;
+    background: var(--bg2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .anomalies-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse 50% 80% at 80% 50%, rgba(232,36,26,0.05), transparent);
+    pointer-events: none;
+  }
+  .anomalies-inner { max-width: 1200px; margin: 0 auto; }
+
+  .anomaly-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    margin-top: 60px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .anomaly-card {
+    background: var(--bg2);
+    padding: 32px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    cursor: default;
+  }
+  .anomaly-card:hover { background: var(--bg3); }
+  .anomaly-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--red);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s;
+  }
+  .anomaly-card:hover::before { transform: scaleX(1); }
+
+  .anomaly-icon {
+    font-family: var(--mono);
+    font-size: 28px;
+    color: var(--red);
+    margin-bottom: 16px;
+    display: block;
+    opacity: 0.8;
+  }
+  .anomaly-name {
+    font-family: var(--display);
+    font-size: 26px;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+  .anomaly-desc {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--white-dim);
+    line-height: 1.6;
+  }
+  .anomaly-tag {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid var(--amber-dim);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  /* ENTITIES */
+  .entities-section { padding: 120px 48px; max-width: 1200px; margin: 0 auto; }
+  .entity-list { margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .entity-row {
+    display: flex;
+    gap: 24px;
+    padding: 28px 32px;
+    background: var(--bg);
+    align-items: flex-start;
+    transition: background 0.2s;
+    cursor: default;
+  }
+  .entity-row:hover { background: var(--bg2); }
+  .entity-index {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red-dim);
+    letter-spacing: 0.1em;
+    min-width: 32px;
+    padding-top: 4px;
+  }
+  .entity-info {}
+  .entity-name {
+    font-family: var(--display);
+    font-size: 28px;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .entity-bio {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--white-dim);
+    line-height: 1.6;
+    max-width: 320px;
+  }
+  .entity-threat {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .threat-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--white-dim);
+  }
+  .threat-bars { display: flex; gap: 3px; }
+  .threat-bar {
+    width: 16px; height: 3px;
+    border-radius: 1px;
+    background: var(--line);
+  }
+  .threat-bar.fill { background: var(--red); }
+
+  /* BIOMES */
+  .biomes-section {
+    max-width: 100%;
+    padding: 120px 48px;
+    background: var(--bg2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .biomes-inner { max-width: 1200px; margin: 0 auto; }
+  .biome-scroll {
+    display: flex;
+    gap: 16px;
+    margin-top: 60px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--red-dim) transparent;
+  }
+  .biome-card {
+    flex: 0 0 240px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px 24px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+    cursor: default;
+  }
+  .biome-card:hover { border-color: var(--red-dim); transform: translateY(-4px); }
+  .biome-number {
+    font-family: var(--display);
+    font-size: 72px;
+    color: var(--white-faint);
+    position: absolute;
+    bottom: -12px;
+    right: 12px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .biome-icon { font-size: 24px; margin-bottom: 16px; display: block; }
+  .biome-name {
+    font-family: var(--display);
+    font-size: 24px;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .biome-desc {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--white-dim);
+    line-height: 1.5;
+  }
+  .biome-status {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .biome-status.live { color: #4ade80; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2); }
+  .biome-status.soon { color: var(--white-dim); background: rgba(240,237,232,0.06); border: 1px solid var(--line); }
+
+  /* EQUIPMENT */
+  .equip-section { padding: 120px 48px; max-width: 1200px; margin: 0 auto; }
+  .equip-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 60px; }
+  .equip-card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px 20px;
+    background: var(--bg);
+    transition: all 0.3s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .equip-card:hover { border-color: var(--line-bright); background: var(--bg2); }
+  .equip-card.locked { opacity: 0.5; }
+  .equip-card.locked::after {
+    content: 'LOCKED';
+    position: absolute;
+    top: 12px; right: 12px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--red-dim);
+    border: 1px solid var(--red-dim);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .equip-icon { font-size: 28px; margin-bottom: 14px; display: block; }
+  .equip-name {
+    font-family: var(--body);
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .equip-desc {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--white-dim);
+    line-height: 1.5;
+  }
+  .equip-unlock {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+
+  /* TERMINAL SECTION */
+  .terminal-section {
+    max-width: 100%;
+    padding: 120px 48px;
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .terminal-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(232,36,26,0.06), transparent);
+    pointer-events: none;
+  }
+  .terminal-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .terminal-box {
+    margin: 60px auto 0;
+    border: 1px solid var(--line-bright);
+    border-radius: 4px;
+    overflow: hidden;
+    text-align: left;
+    max-width: 600px;
+  }
+  .terminal-header {
+    background: var(--bg3);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .terminal-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .terminal-dot:nth-child(1) { background: #E8241A; }
+  .terminal-dot:nth-child(2) { background: #D4830A; }
+  .terminal-dot:nth-child(3) { background: rgba(240,237,232,0.2); }
+  .terminal-title-bar {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--white-dim);
+    letter-spacing: 0.1em;
+    margin-left: 8px;
+  }
+  .terminal-body {
+    padding: 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 2;
+    background: var(--bg);
+  }
+  .t-line { display: flex; gap: 12px; }
+  .t-prompt { color: var(--red); user-select: none; }
+  .t-text { color: rgba(240,237,232,0.7); }
+  .t-highlight { color: var(--white); }
+  .t-cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--red);
+    vertical-align: middle;
+    animation: cursor-blink 1s steps(1) infinite;
+  }
+  @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .cta-big {
+    font-family: var(--display);
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    margin-bottom: 24px;
+  }
+  .cta-sub {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--white-dim);
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 40px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+  }
+  .footer-logo {
+    font-family: var(--display);
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    color: var(--white-dim);
+  }
+  .footer-logo span { color: var(--red); }
+  .footer-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--white-faint);
+    text-transform: uppercase;
+  }
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+  .footer-links a {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--white-dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--red); }
+
+  /* DIVIDER */
+  .full-divider { width: 100%; height: 1px; background: var(--line); }
+
+  /* STATS BAR */
+  .stats-bar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 48px 80px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .stat-cell {
+    background: var(--bg);
+    padding: 32px 28px;
+    text-align: center;
+    transition: background 0.2s;
+  }
+  .stat-cell:hover { background: var(--bg2); }
+  .stat-value {
+    font-family: var(--display);
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  .stat-value .red { color: var(--red); }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--white-dim);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-signal">SIGNAL</span>&nbsp;BREAKERS
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">The Zone</a></li>
+    <li><a href="#anomalies">Anomalies</a></li>
+    <li><a href="#entities">Entities</a></li>
+    <li><a href="#equipment">Gear</a></li>
+    <li><a href="#play" class="nav-cta">Play Now</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="hero-radial"></div>
+  <div class="hero-scanline"></div>
+
+  <div class="hero-overline">
+    <span class="dot" style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:blink 1.5s ease-in-out infinite;"></span>
+    Live Signal Detected — Frequency 0.1
+  </div>
+
+  <h1 class="hero-title">
+    <span class="hero-title-break glitch red" data-text="SIGNAL">SIGNAL</span>
+    <span class="hero-title-break glitch" data-text="BREAKERS">BREAKERS</span>
+  </h1>
+
+  <p class="hero-sub">
+    Enter abandoned signal zones. Solve what's broken. Survive what's inside.
+    Extract before the world collapses around you.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#play" class="btn-primary">Enter the Zone</a>
+    <a href="#about" class="btn-ghost">How it Works</a>
+  </div>
+
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<!-- SIGNAL BAR -->
+<div class="signal-bar">
+  <div class="signal-bar-inner">
+    <!-- Duplicated for seamless loop -->
+    <span class="signal-item"><span class="dot"></span>Multiplayer Co-op</span>
+    <span class="signal-item"><span class="dot"></span>Procedural Zones</span>
+    <span class="signal-item"><span class="dot"></span>Dynamic Anomalies</span>
+    <span class="signal-item"><span class="dot"></span>Rogue-lite Extraction</span>
+    <span class="signal-item"><span class="dot"></span>Progressive Gear</span>
+    <span class="signal-item"><span class="dot"></span>3–5 Players</span>
+    <span class="signal-item"><span class="dot"></span>Multiplayer Co-op</span>
+    <span class="signal-item"><span class="dot"></span>Procedural Zones</span>
+    <span class="signal-item"><span class="dot"></span>Dynamic Anomalies</span>
+    <span class="signal-item"><span class="dot"></span>Rogue-lite Extraction</span>
+    <span class="signal-item"><span class="dot"></span>Progressive Gear</span>
+    <span class="signal-item"><span class="dot"></span>3–5 Players</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label">The Zone</div>
+  <h2 class="section-title">Something went<br><span style="color:var(--red)">wrong</span> with the signal.</h2>
+
+  <div class="about-grid">
+    <div>
+      <p class="about-text">
+        Signal Breakers is a <strong>co-op extraction horror game</strong> on Roblox. You and your team
+        enter procedurally generated "signal zones" — corrupted environments where physics breaks,
+        reality loops, and things that shouldn't exist have started <strong>paying attention</strong>.
+        <br><br>
+        Collect Signal Fragments. Carry limited gear. Make hard calls.
+        <strong>Get out before the zone collapses.</strong>
+        <br><br>
+        Every run is different. Every anomaly is unpredictable. Every entity learns.
+      </p>
+    </div>
+    <div class="loop-steps">
+      <div class="loop-step"><span class="step-num">01</span><div class="step-content"><div class="step-title">Enter the zone</div><div class="step-desc">Queue solo or with a crew. No two maps are the same.</div></div></div>
+      <div class="loop-step"><span class="step-num">02</span><div class="step-content"><div class="step-title">Scan for fragments</div><div class="step-desc">Carry limited inventory. Choose what's worth the risk.</div></div></div>
+      <div class="loop-step"><span class="step-num">03</span><div class="step-content"><div class="step-title">Survive the anomalies</div><div class="step-desc">Gravity shifts. Lights kill. Rooms duplicate. Trust nothing.</div></div></div>
+      <div class="loop-step"><span class="step-num">04</span><div class="step-content"><div class="step-title">Outsmart the entities</div><div class="step-desc">They patrol. They chase. They mimic. Don't look back.</div></div></div>
+      <div class="loop-step"><span class="step-num">05</span><div class="step-content"><div class="step-title">Extract before collapse</div><div class="step-desc">The zone is dying. You have seconds. Move.</div></div></div>
+      <div class="loop-step"><span class="step-num">06</span><div class="step-content"><div class="step-title">Upgrade. Go deeper.</div><div class="step-desc">Unlock harder frequencies. Better loot. Worse things.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:60px 0;">
+  <div class="stats-bar" style="margin-bottom:0;padding:0 48px;">
+    <div class="stat-cell"><div class="stat-value"><span class="red">3</span>–5</div><div class="stat-label">Players per run</div></div>
+    <div class="stat-cell"><div class="stat-value">6<span class="red">+</span></div><div class="stat-label">Biomes to explore</div></div>
+    <div class="stat-cell"><div class="stat-value"><span class="red">∞</span></div><div class="stat-label">Procedural maps</div></div>
+    <div class="stat-cell"><div class="stat-value">0<span class="red">%</span></div><div class="stat-label">Pay to win</div></div>
+  </div>
+</div>
+
+<!-- ANOMALIES -->
+<div class="anomalies-section" id="anomalies">
+  <div class="anomalies-inner">
+    <div class="section-label">Anomaly System</div>
+    <h2 class="section-title">Reality isn't<br><span style="color:var(--red)">stable.</span></h2>
+    <p style="font-size:15px;font-weight:300;color:var(--white-dim);max-width:480px;line-height:1.7;margin-top:16px;">
+      Each zone generates unpredictable environmental corruptions. Learn them. Adapt. Or don't make it out.
+    </p>
+
+    <div class="anomaly-grid">
+      <div class="anomaly-card">
+        <span class="anomaly-icon">↑↓</span>
+        <div class="anomaly-name">Gravity Flip</div>
+        <div class="anomaly-desc">Entire rooms invert. Objects fall toward the ceiling. Navigation becomes a death trap.</div>
+        <span class="anomaly-tag">Environmental</span>
+      </div>
+      <div class="anomaly-card">
+        <span class="anomaly-icon">👁</span>
+        <div class="anomaly-name">Lights That Kill</div>
+        <div class="anomaly-desc">Certain fixtures are lethal when looked at directly. You'll know which ones. Eventually.</div>
+        <span class="anomaly-tag">Environmental</span>
+      </div>
+      <div class="anomaly-card">
+        <span class="anomaly-icon">∞</span>
+        <div class="anomaly-name">Looping Rooms</div>
+        <div class="anomaly-desc">You've walked this hallway before. You'll walk it again. And again. The exit keeps moving.</div>
+        <span class="anomaly-tag">Spatial</span>
+      </div>
+      <div class="anomaly-card">
+        <span class="anomaly-icon">◉</span>
+        <div class="anomaly-name">Fake Exits</div>
+        <div class="anomaly-desc">Not every extraction point leads out. Some take you further in. One trigger per run.</div>
+        <span class="anomaly-tag">Trap</span>
+      </div>
+      <div class="anomaly-card">
+        <span class="anomaly-icon">⟲</span>
+        <div class="anomaly-name">Delayed Movement</div>
+        <div class="anomaly-desc">Your inputs arrive two seconds late. You moved. You just don't know where yet.</div>
+        <span class="anomaly-tag">Gameplay</span>
+      </div>
+      <div class="anomaly-card">
+        <span class="anomaly-icon">📻</span>
+        <div class="anomaly-name">Voice Mimic</div>
+        <div class="anomaly-desc">The radio gives instructions. Coordinates. Warnings. Most of them are false. All sound real.</div>
+        <span class="anomaly-tag">Psychological</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENTITIES -->
+<section id="entities" class="entities-section">
+  <div class="section-label">Entity Database</div>
+  <h2 class="section-title">You're not<br><span style="color:var(--red)">alone.</span></h2>
+  <p style="font-size:15px;font-weight:300;color:var(--white-dim);max-width:480px;line-height:1.7;margin-top:16px;margin-bottom:60px;">
+    Signal zones generate hostile entities. Each behaves differently. None of them are friendly.
+  </p>
+
+  <div class="entity-list">
+    <div class="entity-row">
+      <div class="entity-index">E-01</div>
+      <div class="entity-info">
+        <div class="entity-name">The Watcher</div>
+        <div class="entity-bio">Stands motionless. Kills players who look directly at it. Moves only when unobserved. You never see it move.</div>
+        <div class="entity-threat">
+          <span class="threat-label">Threat</span>
+          <div class="threat-bars">
+            <div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar"></div><div class="threat-bar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="entity-row">
+      <div class="entity-index">E-02</div>
+      <div class="entity-info">
+        <div class="entity-name">The Hollow</div>
+        <div class="entity-bio">Fast. Low to the ground. Activates in darkness and deactivates in light. Carries no sound.</div>
+        <div class="entity-threat">
+          <span class="threat-label">Threat</span>
+          <div class="threat-bars">
+            <div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="entity-row">
+      <div class="entity-index">E-03</div>
+      <div class="entity-info">
+        <div class="entity-name">The Mimic</div>
+        <div class="entity-bio">Copies player voices, messages, and movement patterns. It knows your name. It learned it from you.</div>
+        <div class="entity-threat">
+          <span class="threat-label">Threat</span>
+          <div class="threat-bars">
+            <div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="entity-row">
+      <div class="entity-index">E-04</div>
+      <div class="entity-info">
+        <div class="entity-name">The Static Walker</div>
+        <div class="entity-bio">Teleports during light flicker events. You blink. It's somewhere else. Blink again. It's behind you.</div>
+        <div class="entity-threat">
+          <span class="threat-label">Threat</span>
+          <div class="threat-bars">
+            <div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar fill"></div><div class="threat-bar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BIOMES -->
+<div class="biomes-section" id="biomes">
+  <div class="biomes-inner">
+    <div class="section-label">Signal Frequencies</div>
+    <h2 class="section-title">Six zones.<br><span style="color:var(--red)">All wrong.</span></h2>
+
+    <div class="biome-scroll">
+      <div class="biome-card">
+        <span class="biome-icon">🏫</span>
+        <div class="biome-name">School</div>
+        <div class="biome-desc">Classrooms that never had students. Chalkboards that write themselves.</div>
+        <span class="biome-status live">MVP Launch</span>
+        <div class="biome-number">01</div>
+      </div>
+      <div class="biome-card">
+        <span class="biome-icon">🏥</span>
+        <div class="biome-name">Hospital</div>
+        <div class="biome-desc">Equipment still running. Patients still scheduled. None arrived.</div>
+        <span class="biome-status soon">Coming Soon</span>
+        <div class="biome-number">02</div>
+      </div>
+      <div class="biome-card">
+        <span class="biome-icon">🚇</span>
+        <div class="biome-name">Subway</div>
+        <div class="biome-desc">Trains still running on schedule. No one knows what's on them.</div>
+        <span class="biome-status soon">Coming Soon</span>
+        <div class="biome-number">03</div>
+      </div>
+      <div class="biome-card">
+        <span class="biome-icon">🏢</span>
+        <div class="biome-name">Office</div>
+        <div class="biome-desc">Deadlines that still matter. Meetings that never ended. The projector is always on.</div>
+        <span class="biome-status soon">Coming Soon</span>
+        <div class="biome-number">04</div>
+      </div>
+      <div class="biome-card">
+        <span class="biome-icon">⚙️</span>
+        <div class="biome-name">Industrial</div>
+        <div class="biome-desc">Machinery with no operators. Conveyor belts delivering nothing to nowhere.</div>
+        <span class="biome-status soon">Coming Soon</span>
+        <div class="biome-number">05</div>
+      </div>
+      <div class="biome-card">
+        <span class="biome-icon">🛍️</span>
+        <div class="biome-name">Flooded Mall</div>
+        <div class="biome-desc">Knee-deep water, unlocked stores, and something circling the food court.</div>
+        <span class="biome-status soon">Coming Soon</span>
+        <div class="biome-number">06</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EQUIPMENT -->
+<section id="equipment" class="equip-section">
+  <div class="section-label">Equipment</div>
+  <h2 class="section-title">Gear up.<br><span style="color:var(--red)">Go in.</span></h2>
+
+  <div class="equip-grid">
+    <div class="equip-card">
+      <span class="equip-icon">🔦</span>
+      <div class="equip-name">Flashlight</div>
+      <div class="equip-desc">Standard issue. Runs on batteries. Don't let it die.</div>
+      <div class="equip-unlock">◆ Starter</div>
+    </div>
+    <div class="equip-card">
+      <span class="equip-icon">📡</span>
+      <div class="equip-name">Scanner</div>
+      <div class="equip-desc">Detects Signal Fragments through walls. Limited charge.</div>
+      <div class="equip-unlock">◆ Starter</div>
+    </div>
+    <div class="equip-card">
+      <span class="equip-icon">🔋</span>
+      <div class="equip-name">Battery Pack</div>
+      <div class="equip-desc">Extends all electronic tool lifespans. Bring two.</div>
+      <div class="equip-unlock">◆ Starter</div>
+    </div>
+    <div class="equip-card locked">
+      <span class="equip-icon">🎯</span>
+      <div class="equip-name">Motion Detector</div>
+      <div class="equip-desc">Alerts the team when something moves nearby. Sometimes false positives.</div>
+      <div class="equip-unlock">⬡ Level 5</div>
+    </div>
+    <div class="equip-card locked">
+      <span class="equip-icon">📻</span>
+      <div class="equip-name">Signal Jammer</div>
+      <div class="equip-desc">Disrupts entity detection range for 30 seconds. Single use.</div>
+      <div class="equip-unlock">⬡ Level 10</div>
+    </div>
+    <div class="equip-card locked">
+      <span class="equip-icon">🚁</span>
+      <div class="equip-name">Scout Drone</div>
+      <div class="equip-desc">Fly ahead and map rooms before entering. Limited battery.</div>
+      <div class="equip-unlock">⬡ Level 15</div>
+    </div>
+    <div class="equip-card locked">
+      <span class="equip-icon">🪤</span>
+      <div class="equip-name">Noise Trap</div>
+      <div class="equip-desc">Deploy to distract and redirect entities. Lasts 90 seconds.</div>
+      <div class="equip-unlock">⬡ Level 20</div>
+    </div>
+    <div class="equip-card locked">
+      <span class="equip-icon">📍</span>
+      <div class="equip-name">Portable Beacon</div>
+      <div class="equip-desc">Creates a second extraction marker. Share with teammates.</div>
+      <div class="equip-unlock">⬡ Level 25</div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL / CTA -->
+<div class="terminal-section" id="play">
+  <div class="terminal-inner">
+    <div class="section-label" style="justify-content:center;">Incoming Transmission</div>
+    <h2 class="cta-big">Ready to<br><span style="color:var(--red)">break in?</span></h2>
+    <p class="cta-sub">Signal Breakers is live on Roblox. Assemble your team,<br>pick your frequency, and find out what's broadcasting.</p>
+    <div style="display:flex;gap:16px;justify-content:center;margin-bottom:60px;">
+      <a href="https://roblox.com" class="btn-primary" target="_blank">Play on Roblox</a>
+      <a href="#" class="btn-ghost">Join Discord</a>
+    </div>
+
+    <div class="terminal-box">
+      <div class="terminal-header">
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+        <div class="terminal-dot"></div>
+        <span class="terminal-title-bar">signal_terminal_v1.0 — ACTIVE</span>
+      </div>
+      <div class="terminal-body">
+        <div class="t-line"><span class="t-prompt">SB&gt;</span><span class="t-text">connecting to signal zone...</span></div>
+        <div class="t-line"><span class="t-prompt">SB&gt;</span><span class="t-text">frequency: <span class="t-highlight">0.1 — school</span></span></div>
+        <div class="t-line"><span class="t-prompt">SB&gt;</span><span class="t-text">players detected: <span class="t-highlight">3 / 5</span></span></div>
+        <div class="t-line"><span class="t-prompt">SB&gt;</span><span class="t-text">anomalies loaded: <span class="t-highlight">4</span></span></div>
+        <div class="t-line"><span class="t-prompt">SB&gt;</span><span class="t-text">entities: <span style="color:var(--red)">2 active</span></span></div>
+        <div class="t-line"><span class="t-prompt">SB&gt;</span><span class="t-text">collapse timer: <span style="color:var(--amber)">08:32</span></span></div>
+        <div class="t-line"><span class="t-prompt">SB&gt;</span><span class="t-text">good luck. <span class="t-cursor"></span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span>SIGNAL</span> BREAKERS</div>
+  <div class="footer-meta">© 2025 Signal Breakers — Roblox Game</div>
+  <ul class="footer-links">
+    <li><a href="#">Discord</a></li>
+    <li><a href="#">Twitter</a></li>
+    <li><a href="#">Roblox</a></li>
+  </ul>
+</footer>
+
+<script>
+  // Nav scroll effect
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.anomaly-card, .entity-row, .biome-card, .equip-card, .loop-step, .stat-cell').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+
+  // Stagger anomaly cards
+  document.querySelectorAll('.anomaly-card').forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.07}s`;
+  });
+  document.querySelectorAll('.equip-card').forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.05}s`;
+  });
+  document.querySelectorAll('.biome-card').forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.08}s`;
+  });
+</script>
+</body>
+</html>
